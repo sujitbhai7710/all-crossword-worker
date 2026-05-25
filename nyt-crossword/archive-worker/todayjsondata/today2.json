@@ -1,0 +1,749 @@
+{
+  "puzzle": {
+    "date": "2025-06-21",
+    "formatted_date": "Saturday, June 21, 2025",
+    "day_of_week": "Saturday",
+    "title": "New York Times, Saturday, June 21, 2025",
+    "author": "Christina Iverson and Doug Peterson",
+    "editor": "Will Shortz",
+    "permalink": "https://www.xwordinfo.com/Crossword?date=06/21/2025"
+  },
+  "clues": [
+    {
+      "number": 1,
+      "clue": "Olympics event in which Germany is the traditional powerhouse",
+      "answer": "BOBSLED",
+      "direction": "across"
+    },
+    {
+      "number": 8,
+      "clue": "Scattered",
+      "answer": "SPARSE",
+      "direction": "across"
+    },
+    {
+      "number": 14,
+      "clue": "Words before ask, admit or go",
+      "answer": "IHAVETO",
+      "direction": "across"
+    },
+    {
+      "number": 15,
+      "clue": "First name of the \"Princess of Pop\"",
+      "answer": "ARIANA",
+      "direction": "across"
+    },
+    {
+      "number": 16,
+      "clue": "Donned quickly",
+      "answer": "THREWON",
+      "direction": "across"
+    },
+    {
+      "number": 17,
+      "clue": "Puts in order",
+      "answer": "TIDIES",
+      "direction": "across"
+    },
+    {
+      "number": 20,
+      "clue": "\"Oh, ___ on!\"",
+      "answer": "ITS",
+      "direction": "across"
+    },
+    {
+      "number": 21,
+      "clue": "Rita of the \"Fifty Shades\" movies",
+      "answer": "ORA",
+      "direction": "across"
+    },
+    {
+      "number": 22,
+      "clue": "Food label abbr.",
+      "answer": "RDA",
+      "direction": "across"
+    },
+    {
+      "number": 23,
+      "clue": "Kitchen alternative to tallow",
+      "answer": "GHEE",
+      "direction": "across"
+    },
+    {
+      "number": 25,
+      "clue": "Grammy-winning song (2013) that begins \"The snow glows white on the mountain tonight\"",
+      "answer": "LETITGO",
+      "direction": "across"
+    },
+    {
+      "number": 28,
+      "clue": "Gen-Xer's \"excellent\"",
+      "answer": "RAD",
+      "direction": "across"
+    },
+    {
+      "number": 29,
+      "clue": "Black-and-yellow demarcation",
+      "answer": "POLICETAPE",
+      "direction": "across"
+    },
+    {
+      "number": 32,
+      "clue": "Cootie-free greeting",
+      "answer": "AIRKISS",
+      "direction": "across"
+    },
+    {
+      "number": 34,
+      "clue": "Foster kid in \"Taxi Driver\"?",
+      "answer": "JODIE",
+      "direction": "across"
+    },
+    {
+      "number": 35,
+      "clue": "Bargaining subjects",
+      "answer": "PLEAS",
+      "direction": "across"
+    },
+    {
+      "number": 36,
+      "clue": "Frank who wrote the music and lyrics to \"How to Succeed in Business Without Really Trying\"",
+      "answer": "LOESSER",
+      "direction": "across"
+    },
+    {
+      "number": 38,
+      "clue": "Like a Mediterranean diet",
+      "answer": "HEARTSMART",
+      "direction": "across"
+    },
+    {
+      "number": 41,
+      "clue": "Endurance event, for short",
+      "answer": "TRI",
+      "direction": "across"
+    },
+    {
+      "number": 42,
+      "clue": "Bending over, perhaps",
+      "answer": "MOONING",
+      "direction": "across"
+    },
+    {
+      "number": 43,
+      "clue": "Word before or after book",
+      "answer": "CASE",
+      "direction": "across"
+    },
+    {
+      "number": 44,
+      "clue": "\"Ugh!\"",
+      "answer": "GAH",
+      "direction": "across"
+    },
+    {
+      "number": 46,
+      "clue": "QB Dawson who faced Bart Starr in Super Bowl I",
+      "answer": "LEN",
+      "direction": "across"
+    },
+    {
+      "number": 47,
+      "clue": "Prune, say",
+      "answer": "CUT",
+      "direction": "across"
+    },
+    {
+      "number": 56,
+      "clue": "In the shop, say",
+      "answer": "ONSITE",
+      "direction": "across"
+    },
+    {
+      "number": 57,
+      "clue": "Dish, at times",
+      "answer": "ANTENNA",
+      "direction": "across"
+    },
+    {
+      "number": 58,
+      "clue": "Was overrun",
+      "answer": "TEEMED",
+      "direction": "across"
+    },
+    {
+      "number": 59,
+      "clue": "Performs a perfect dismount, e.g.",
+      "answer": "NAILSIT",
+      "direction": "across"
+    },
+    {
+      "number": 1,
+      "clue": "Storage units",
+      "answer": "BITS",
+      "direction": "down"
+    },
+    {
+      "number": 2,
+      "clue": "\"Didn't see ya there!\"",
+      "answer": "OHHI",
+      "direction": "down"
+    },
+    {
+      "number": 4,
+      "clue": "Trim",
+      "answer": "SVELTE",
+      "direction": "down"
+    },
+    {
+      "number": 5,
+      "clue": "Literature Nobelist who wrote \"Dodsworth\" and \"Kingsblood Royal\"",
+      "answer": "LEWIS",
+      "direction": "down"
+    },
+    {
+      "number": 6,
+      "clue": "Berkshire institution",
+      "answer": "ETON",
+      "direction": "down"
+    },
+    {
+      "number": 7,
+      "clue": "Vietnamese currency",
+      "answer": "DONG",
+      "direction": "down"
+    },
+    {
+      "number": 8,
+      "clue": "Like \"Animal Farm\" and \"Don Quixote\"",
+      "answer": "SATIRIC",
+      "direction": "down"
+    },
+    {
+      "number": 9,
+      "clue": "Flight of fancy?",
+      "answer": "PRIVATEJET",
+      "direction": "down"
+    },
+    {
+      "number": 10,
+      "clue": "\"Ritorna vincitor\" singer",
+      "answer": "AIDA",
+      "direction": "down"
+    },
+    {
+      "number": 12,
+      "clue": "Mortimer who once made a guest appearance on \"The Muppet Show\"",
+      "answer": "SNERD",
+      "direction": "down"
+    },
+    {
+      "number": 13,
+      "clue": "Average booster",
+      "answer": "EASYA",
+      "direction": "down"
+    },
+    {
+      "number": 19,
+      "clue": "Side order with curry",
+      "answer": "ROTI",
+      "direction": "down"
+    },
+    {
+      "number": 23,
+      "clue": "It has its peaks and valleys",
+      "answer": "GRAPH",
+      "direction": "down"
+    },
+    {
+      "number": 24,
+      "clue": "Ethiopian emperor Selassie",
+      "answer": "HAILE",
+      "direction": "down"
+    },
+    {
+      "number": 25,
+      "clue": "Part of U.C.L.A.",
+      "answer": "LOS",
+      "direction": "down"
+    },
+    {
+      "number": 26,
+      "clue": "High ways",
+      "answer": "ELS",
+      "direction": "down"
+    },
+    {
+      "number": 27,
+      "clue": "Vehicles seen in the films \"Dazed and Confused\" and \"Two-Lane Blacktop\"",
+      "answer": "GTOS",
+      "direction": "down"
+    },
+    {
+      "number": 30,
+      "clue": "Some seaside attractions",
+      "answer": "PIERS",
+      "direction": "down"
+    },
+    {
+      "number": 31,
+      "clue": "Disturbing, in a way",
+      "answer": "EERIE",
+      "direction": "down"
+    },
+    {
+      "number": 33,
+      "clue": "Name in the baking aisle",
+      "answer": "KARO",
+      "direction": "down"
+    },
+    {
+      "number": 36,
+      "clue": "Brief office hookup?",
+      "answer": "LAN",
+      "direction": "down"
+    },
+    {
+      "number": 37,
+      "clue": "___ chart",
+      "answer": "ORG",
+      "direction": "down"
+    },
+    {
+      "number": 39,
+      "clue": "Dismissed, with \"at\"",
+      "answer": "SNEERED",
+      "direction": "down"
+    },
+    {
+      "number": 40,
+      "clue": "Word with game or control",
+      "answer": "MIND",
+      "direction": "down"
+    },
+    {
+      "number": 43,
+      "clue": "Old-fashioned club",
+      "answer": "CUDGEL",
+      "direction": "down"
+    },
+    {
+      "number": 44,
+      "clue": "Sex therapy topic",
+      "answer": "GSPOT",
+      "direction": "down"
+    },
+    {
+      "number": 45,
+      "clue": "Pay (for)",
+      "answer": "ATONE",
+      "direction": "down"
+    },
+    {
+      "number": 47,
+      "clue": "\"C'mon, please?\"",
+      "answer": "CANTI",
+      "direction": "down"
+    },
+    {
+      "number": 49,
+      "clue": "Starched",
+      "answer": "PRIM",
+      "direction": "down"
+    },
+    {
+      "number": 50,
+      "clue": "Port WSW of Algiers",
+      "answer": "ORAN",
+      "direction": "down"
+    },
+    {
+      "number": 51,
+      "clue": "Gram alternative",
+      "answer": "NANA",
+      "direction": "down"
+    },
+    {
+      "number": 52,
+      "clue": "Certain bond, informally",
+      "answer": "MUNI",
+      "direction": "down"
+    },
+    {
+      "number": 53,
+      "clue": "Ministre d'___",
+      "answer": "ETAT",
+      "direction": "down"
+    }
+  ],
+  "across": [
+    {
+      "number": 1,
+      "clue": "Olympics event in which Germany is the traditional powerhouse",
+      "answer": "BOBSLED",
+      "direction": "across"
+    },
+    {
+      "number": 8,
+      "clue": "Scattered",
+      "answer": "SPARSE",
+      "direction": "across"
+    },
+    {
+      "number": 14,
+      "clue": "Words before ask, admit or go",
+      "answer": "IHAVETO",
+      "direction": "across"
+    },
+    {
+      "number": 15,
+      "clue": "First name of the \"Princess of Pop\"",
+      "answer": "ARIANA",
+      "direction": "across"
+    },
+    {
+      "number": 16,
+      "clue": "Donned quickly",
+      "answer": "THREWON",
+      "direction": "across"
+    },
+    {
+      "number": 17,
+      "clue": "Puts in order",
+      "answer": "TIDIES",
+      "direction": "across"
+    },
+    {
+      "number": 20,
+      "clue": "\"Oh, ___ on!\"",
+      "answer": "ITS",
+      "direction": "across"
+    },
+    {
+      "number": 21,
+      "clue": "Rita of the \"Fifty Shades\" movies",
+      "answer": "ORA",
+      "direction": "across"
+    },
+    {
+      "number": 22,
+      "clue": "Food label abbr.",
+      "answer": "RDA",
+      "direction": "across"
+    },
+    {
+      "number": 23,
+      "clue": "Kitchen alternative to tallow",
+      "answer": "GHEE",
+      "direction": "across"
+    },
+    {
+      "number": 25,
+      "clue": "Grammy-winning song (2013) that begins \"The snow glows white on the mountain tonight\"",
+      "answer": "LETITGO",
+      "direction": "across"
+    },
+    {
+      "number": 28,
+      "clue": "Gen-Xer's \"excellent\"",
+      "answer": "RAD",
+      "direction": "across"
+    },
+    {
+      "number": 29,
+      "clue": "Black-and-yellow demarcation",
+      "answer": "POLICETAPE",
+      "direction": "across"
+    },
+    {
+      "number": 32,
+      "clue": "Cootie-free greeting",
+      "answer": "AIRKISS",
+      "direction": "across"
+    },
+    {
+      "number": 34,
+      "clue": "Foster kid in \"Taxi Driver\"?",
+      "answer": "JODIE",
+      "direction": "across"
+    },
+    {
+      "number": 35,
+      "clue": "Bargaining subjects",
+      "answer": "PLEAS",
+      "direction": "across"
+    },
+    {
+      "number": 36,
+      "clue": "Frank who wrote the music and lyrics to \"How to Succeed in Business Without Really Trying\"",
+      "answer": "LOESSER",
+      "direction": "across"
+    },
+    {
+      "number": 38,
+      "clue": "Like a Mediterranean diet",
+      "answer": "HEARTSMART",
+      "direction": "across"
+    },
+    {
+      "number": 41,
+      "clue": "Endurance event, for short",
+      "answer": "TRI",
+      "direction": "across"
+    },
+    {
+      "number": 42,
+      "clue": "Bending over, perhaps",
+      "answer": "MOONING",
+      "direction": "across"
+    },
+    {
+      "number": 43,
+      "clue": "Word before or after book",
+      "answer": "CASE",
+      "direction": "across"
+    },
+    {
+      "number": 44,
+      "clue": "\"Ugh!\"",
+      "answer": "GAH",
+      "direction": "across"
+    },
+    {
+      "number": 46,
+      "clue": "QB Dawson who faced Bart Starr in Super Bowl I",
+      "answer": "LEN",
+      "direction": "across"
+    },
+    {
+      "number": 47,
+      "clue": "Prune, say",
+      "answer": "CUT",
+      "direction": "across"
+    },
+    {
+      "number": 56,
+      "clue": "In the shop, say",
+      "answer": "ONSITE",
+      "direction": "across"
+    },
+    {
+      "number": 57,
+      "clue": "Dish, at times",
+      "answer": "ANTENNA",
+      "direction": "across"
+    },
+    {
+      "number": 58,
+      "clue": "Was overrun",
+      "answer": "TEEMED",
+      "direction": "across"
+    },
+    {
+      "number": 59,
+      "clue": "Performs a perfect dismount, e.g.",
+      "answer": "NAILSIT",
+      "direction": "across"
+    }
+  ],
+  "down": [
+    {
+      "number": 1,
+      "clue": "Storage units",
+      "answer": "BITS",
+      "direction": "down"
+    },
+    {
+      "number": 2,
+      "clue": "\"Didn't see ya there!\"",
+      "answer": "OHHI",
+      "direction": "down"
+    },
+    {
+      "number": 4,
+      "clue": "Trim",
+      "answer": "SVELTE",
+      "direction": "down"
+    },
+    {
+      "number": 5,
+      "clue": "Literature Nobelist who wrote \"Dodsworth\" and \"Kingsblood Royal\"",
+      "answer": "LEWIS",
+      "direction": "down"
+    },
+    {
+      "number": 6,
+      "clue": "Berkshire institution",
+      "answer": "ETON",
+      "direction": "down"
+    },
+    {
+      "number": 7,
+      "clue": "Vietnamese currency",
+      "answer": "DONG",
+      "direction": "down"
+    },
+    {
+      "number": 8,
+      "clue": "Like \"Animal Farm\" and \"Don Quixote\"",
+      "answer": "SATIRIC",
+      "direction": "down"
+    },
+    {
+      "number": 9,
+      "clue": "Flight of fancy?",
+      "answer": "PRIVATEJET",
+      "direction": "down"
+    },
+    {
+      "number": 10,
+      "clue": "\"Ritorna vincitor\" singer",
+      "answer": "AIDA",
+      "direction": "down"
+    },
+    {
+      "number": 12,
+      "clue": "Mortimer who once made a guest appearance on \"The Muppet Show\"",
+      "answer": "SNERD",
+      "direction": "down"
+    },
+    {
+      "number": 13,
+      "clue": "Average booster",
+      "answer": "EASYA",
+      "direction": "down"
+    },
+    {
+      "number": 19,
+      "clue": "Side order with curry",
+      "answer": "ROTI",
+      "direction": "down"
+    },
+    {
+      "number": 23,
+      "clue": "It has its peaks and valleys",
+      "answer": "GRAPH",
+      "direction": "down"
+    },
+    {
+      "number": 24,
+      "clue": "Ethiopian emperor Selassie",
+      "answer": "HAILE",
+      "direction": "down"
+    },
+    {
+      "number": 25,
+      "clue": "Part of U.C.L.A.",
+      "answer": "LOS",
+      "direction": "down"
+    },
+    {
+      "number": 26,
+      "clue": "High ways",
+      "answer": "ELS",
+      "direction": "down"
+    },
+    {
+      "number": 27,
+      "clue": "Vehicles seen in the films \"Dazed and Confused\" and \"Two-Lane Blacktop\"",
+      "answer": "GTOS",
+      "direction": "down"
+    },
+    {
+      "number": 30,
+      "clue": "Some seaside attractions",
+      "answer": "PIERS",
+      "direction": "down"
+    },
+    {
+      "number": 31,
+      "clue": "Disturbing, in a way",
+      "answer": "EERIE",
+      "direction": "down"
+    },
+    {
+      "number": 33,
+      "clue": "Name in the baking aisle",
+      "answer": "KARO",
+      "direction": "down"
+    },
+    {
+      "number": 36,
+      "clue": "Brief office hookup?",
+      "answer": "LAN",
+      "direction": "down"
+    },
+    {
+      "number": 37,
+      "clue": "___ chart",
+      "answer": "ORG",
+      "direction": "down"
+    },
+    {
+      "number": 39,
+      "clue": "Dismissed, with \"at\"",
+      "answer": "SNEERED",
+      "direction": "down"
+    },
+    {
+      "number": 40,
+      "clue": "Word with game or control",
+      "answer": "MIND",
+      "direction": "down"
+    },
+    {
+      "number": 43,
+      "clue": "Old-fashioned club",
+      "answer": "CUDGEL",
+      "direction": "down"
+    },
+    {
+      "number": 44,
+      "clue": "Sex therapy topic",
+      "answer": "GSPOT",
+      "direction": "down"
+    },
+    {
+      "number": 45,
+      "clue": "Pay (for)",
+      "answer": "ATONE",
+      "direction": "down"
+    },
+    {
+      "number": 47,
+      "clue": "\"C'mon, please?\"",
+      "answer": "CANTI",
+      "direction": "down"
+    },
+    {
+      "number": 49,
+      "clue": "Starched",
+      "answer": "PRIM",
+      "direction": "down"
+    },
+    {
+      "number": 50,
+      "clue": "Port WSW of Algiers",
+      "answer": "ORAN",
+      "direction": "down"
+    },
+    {
+      "number": 51,
+      "clue": "Gram alternative",
+      "answer": "NANA",
+      "direction": "down"
+    },
+    {
+      "number": 52,
+      "clue": "Certain bond, informally",
+      "answer": "MUNI",
+      "direction": "down"
+    },
+    {
+      "number": 53,
+      "clue": "Ministre d'___",
+      "answer": "ETAT",
+      "direction": "down"
+    }
+  ]
+}

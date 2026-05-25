@@ -1,0 +1,23 @@
+# How We Access the "Forbidden" URL
+
+The "Forbidden" (403) error you encountered when using the simple `/today/add` endpoint occurs because the New York Times servers have stricter security checks on their standard API endpoints or simply block requests that look like automated scripts (bots).
+
+## The Problem
+The original code for `/today` used a standard `fetch` request:
+`const response = await fetch(url);`
+
+When this runs in a cloud environment (like Cloudflare Workers), it lacks the headers that a real web browser sends. The server sees this "naked" request, identifying it as a bot, and blocks it.
+
+## The Solution
+The `/date/add` endpoint was already working because it uses a more sophisticated approach. We applied this same logic to the `/today/add` endpoint.
+
+Instead of a simple fetch, we now construct a request that mimics a real user using a web browser. We do this by adding specific **HTTP Headers**:
+
+1.  **User-Agent**: We pretend to be a specific browser (Chrome on Windows) so we don't look like a generic script.
+    *   `'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) ...'`
+2.  **Referer**: We tell the server we came from the actual NYT game page.
+    *   `'referer': ...`
+3.  **Authority & Scheme**: Standard HTTP/2 headers expected by modern servers.
+4.  **Security Headers**: Headers like `sec-ch-ua` (Client Hints) give details about the "browser" version, further convincing the server.
+
+ By passing `true` to our internal helper function (`fetchNYTPuzzle(today, true)`), we force the code to use the same logic used for archival dates, which includes all these "camouflage" headers. This tricks the server into treating our request as a legitimate user visit, bypassing the 403 Forbidden block.
