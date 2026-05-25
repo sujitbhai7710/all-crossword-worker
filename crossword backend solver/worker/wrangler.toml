@@ -1,0 +1,14 @@
+name = "crossword-solver-api"
+main = "src/index.js"
+compatibility_date = "2023-05-18"
+
+[vars]
+ALLOWED_ORIGIN = "*"
+ARCHIVE_API_URL = "https://crossword-archive-worker.mitomat.workers.dev"
+MINI_API_URL = "https://nyt-mini-archive.nytsolver.workers.dev"
+ENABLE_MINI_LOOKUP = "true"
+COLD_ARCHIVE_BASE_URL = ""
+
+[[services]]
+binding = "ARCHIVE_SERVICE"
+service = "crossword-archive-worker"
