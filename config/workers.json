@@ -17,15 +17,6 @@
       "databaseName": "guardian_cryptic_archive"
     },
     {
-      "slug": "guardian-everyman",
-      "name": "Guardian Everyman",
-      "family": "guardian",
-      "seriesTag": "everyman",
-      "title": "Guardian Everyman Crossword",
-      "workerName": "guardian-everyman-worker",
-      "databaseName": "guardian_everyman_archive"
-    },
-    {
       "slug": "guardian-prize",
       "name": "Guardian Prize",
       "family": "guardian",
@@ -51,15 +42,6 @@
       "title": "Guardian Quiptic Crossword",
       "workerName": "guardian-quiptic-worker",
       "databaseName": "guardian_quiptic_archive"
-    },
-    {
-      "slug": "guardian-speedy",
-      "name": "Guardian Speedy",
-      "family": "guardian",
-      "seriesTag": "speedy",
-      "title": "Guardian Speedy Crossword",
-      "workerName": "guardian-speedy-worker",
-      "databaseName": "guardian_speedy_archive"
     },
     {
       "slug": "guardian-weekend",
@@ -92,13 +74,6 @@
       "databaseName": "usa_today_daily_archive"
     },
     {
-      "slug": "usa-today-quick",
-      "name": "USA Today Quick",
-      "family": "usa-today-quick",
-      "workerName": "usa-today-quick-worker",
-      "databaseName": "usa_today_quick_archive"
-    },
-    {
       "slug": "washington-post-daily",
       "name": "Washington Post Daily",
       "family": "wapo-daily",
@@ -118,6 +93,62 @@
       "family": "wapo-sunday",
       "workerName": "washington-post-sunday-worker",
       "databaseName": "washington_post_sunday_archive"
+    },
+    {
+      "slug": "new-yorker",
+      "name": "New Yorker",
+      "family": "new-yorker",
+      "title": "New Yorker Crossword",
+      "workerName": "new-yorker-crossword-worker",
+      "databaseName": "new_yorker_crossword_archive"
+    },
+    {
+      "slug": "new-yorker-mini",
+      "name": "New Yorker Mini",
+      "family": "new-yorker-mini",
+      "title": "New Yorker Mini Crossword",
+      "workerName": "new-yorker-mini-worker",
+      "databaseName": "new_yorker_mini_archive"
+    },
+    {
+      "slug": "universal",
+      "name": "Universal",
+      "family": "universal",
+      "title": "Universal Crossword",
+      "workerName": "universal-crossword-worker",
+      "databaseName": "universal_crossword_archive"
+    },
+    {
+      "slug": "newsday",
+      "name": "Newsday",
+      "family": "newsday",
+      "title": "Newsday Crossword",
+      "workerName": "newsday-crossword-worker",
+      "databaseName": "newsday_crossword_archive"
+    },
+    {
+      "slug": "vox",
+      "name": "Vox",
+      "family": "vox",
+      "title": "Vox Crossword",
+      "workerName": "vox-crossword-worker",
+      "databaseName": "vox_crossword_archive"
+    },
+    {
+      "slug": "daily-pop",
+      "name": "Daily Pop",
+      "family": "daily-pop",
+      "title": "Daily Pop Crossword",
+      "workerName": "daily-pop-worker",
+      "databaseName": "daily_pop_archive"
+    },
+    {
+      "slug": "nyt-midi",
+      "name": "NYT Midi",
+      "family": "nyt-midi",
+      "title": "NYT Midi Crossword",
+      "workerName": "nyt-midi-worker",
+      "databaseName": "nyt_midi_archive"
     }
   ]
 }

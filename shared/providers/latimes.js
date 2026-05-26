@@ -66,6 +66,22 @@ export function createLatimesDailyProvider() {
   };
 }
 
+/**
+ * Compute the AmuseLabs fvlt (fingerprint verification load token).
+ * Algorithm: fvlt = (hash(set) ^ hash(puzzleId) ^ hash(uid)) as hex string
+ * where hash(s) = sum of char codes (unsigned 32-bit).
+ */
+function computeFvlt(set, puzzleId, uid) {
+  const hash = (str) => {
+    let t = 0;
+    for (let n = 0; n < str.length; n++) {
+      t = (t + str.charCodeAt(n)) >>> 0;
+    }
+    return t;
+  };
+  return ((hash(set) ^ hash(puzzleId) ^ hash(uid)) >>> 0).toString(16);
+}
+
 async function getLatMiniLoadToken() {
   const pickerUrl = 'https://lat.amuselabs.com/lat/date-picker?set=latimes-mini';
   const pickerHtml = await fetchText(pickerUrl, {
@@ -75,24 +91,29 @@ async function getLatMiniLoadToken() {
     }
   });
 
-  const rawspsMatch = pickerHtml.match(/pickerParams\.rawsps\s*=\s*['"]([^'"]+)['"]/);
-  if (rawspsMatch) {
-    const params = JSON.parse(atob(rawspsMatch[1]));
-    return params.loadToken || '';
-  }
-
   const scriptMatch = pickerHtml.match(/<script[^>]*id="params"[^>]*>([\s\S]*?)<\/script>/i);
   if (!scriptMatch) {
-    return '';
+    return { loadToken: '', uid: '' };
   }
 
   const paramsBlob = JSON.parse(scriptMatch[1]);
   if (!paramsBlob.rawsps) {
-    return '';
+    return { loadToken: '', uid: '' };
   }
 
   const decoded = JSON.parse(atob(paramsBlob.rawsps));
-  return decoded.loadToken || '';
+  const loadToken = decoded.loadToken || '';
+
+  // Parse uid from JWT loadToken
+  let uid = '';
+  if (loadToken) {
+    try {
+      const jwtPayload = JSON.parse(atob(loadToken.split('.')[1]));
+      uid = jwtPayload.uid || '';
+    } catch (e) {}
+  }
+
+  return { loadToken, uid };
 }
 
 export function createLatimesMiniProvider() {
@@ -102,11 +123,19 @@ export function createLatimesMiniProvider() {
     lookbackDays: 14,
     async fetchByDate(date) {
       const compact = date.replace(/-/g, '');
-      const loadToken = await getLatMiniLoadToken();
-      let url = `https://lat.amuselabs.com/lat/crossword?id=latimes-mini-${compact}&set=latimes-mini`;
+      const set = 'latimes-mini';
+      const puzzleId = `latimes-mini-${compact}`;
+      const { loadToken, uid } = await getLatMiniLoadToken();
+
+      let url = `https://lat.amuselabs.com/lat/crossword?id=${puzzleId}&set=${set}`;
 
       if (loadToken) {
         url += `&loadToken=${encodeURIComponent(loadToken)}`;
+      }
+
+      if (uid) {
+        const fvlt = computeFvlt(set, puzzleId, uid);
+        url += `&fvlt=${fvlt}`;
       }
 
       return fetchAmuseLabsPuzzle({

@@ -4,5 +4,8 @@
   "type": "module",
   "scripts": {
     "generate": "node scripts/generate.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^4.94.0"
   }
 }

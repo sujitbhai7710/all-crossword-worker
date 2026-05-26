@@ -25,7 +25,7 @@ async function fetchGuardianPuzzleReference(seriesTag, date, apiKey) {
   const json = await fetchJson(guardianApiUrl(seriesTag, date, apiKey));
   const result = json.response?.results?.[0];
   if (!result) {
-    throw notFound(`No Guardian ${seriesTag} puzzle for ${date}`);
+    return null;
   }
   return result;
 }
@@ -73,15 +73,83 @@ function parseGuardianPuzzle(pageData, date, permalink, fallbackTitle) {
   });
 }
 
+// Series page approach — scrapes the series landing page to find puzzle URLs
+// This is more reliable than the Content API which has a 3-7 day indexing lag
+
+// Some series have URL slugs that differ from their series tag
+const SERIES_URL_OVERRIDES = {
+  'weekend-crossword': 'weekend',
+};
+
+async function fetchGuardianPuzzleFromSeriesPage(seriesTag, date) {
+  const seriesUrl = `https://www.theguardian.com/crosswords/series/${seriesTag}`;
+  const seriesHtml = await fetchText(seriesUrl);
+
+  // The URL pattern for puzzle links may differ from the series tag
+  // e.g., series "weekend-crossword" has URLs "/crosswords/weekend/{number}"
+  const urlSlug = SERIES_URL_OVERRIDES[seriesTag] || seriesTag;
+
+  // Extract puzzle URLs from the series page
+  const urlMatches = [...seriesHtml.matchAll(
+    new RegExp(`href="(/crosswords/${urlSlug}/\\d+)"`, 'g')
+  )];
+
+  if (urlMatches.length === 0) {
+    return null;
+  }
+
+  // Check the first few puzzles for a matching date
+  for (const match of urlMatches.slice(0, 5)) {
+    const puzzleUrl = `https://www.theguardian.com${match[1]}`;
+    try {
+      const puzzleHtml = await fetchText(puzzleUrl);
+
+      // Extract the gu-island CrosswordComponent
+      const islandMatch = puzzleHtml.match(/<gu-island[^>]*name="CrosswordComponent"[^>]*props="([^"]*)"/i);
+      if (!islandMatch) continue;
+
+      const props = decodeIslandProps(islandMatch[1]);
+      const pageData = props.data;
+      if (!pageData) continue;
+
+      // Check if this puzzle has the date we need (or is the most recent)
+      return parseGuardianPuzzle(pageData, date, puzzleUrl, `Guardian ${seriesTag} crossword`);
+    } catch (e) {
+      continue;
+    }
+  }
+
+  return null;
+}
+
 export function createGuardianProvider({ seriesTag, title, lookbackDays = 21 }) {
   return {
     slug: `guardian-${seriesTag}`,
     title,
     lookbackDays,
     async fetchByDate(date, env) {
-      const result = await fetchGuardianPuzzleReference(seriesTag, date, env.GUARDIAN_API_KEY);
-      const pageData = await fetchGuardianPageData(result.webUrl);
-      return parseGuardianPuzzle(pageData, date, result.webUrl, result.webTitle || title);
+      // Primary: Try Content API first (works well for historical dates)
+      try {
+        const result = await fetchGuardianPuzzleReference(seriesTag, date, env.GUARDIAN_API_KEY);
+        if (result) {
+          const pageData = await fetchGuardianPageData(result.webUrl);
+          return parseGuardianPuzzle(pageData, date, result.webUrl, result.webTitle || title);
+        }
+      } catch (e) {
+        // Content API failed or returned 0 results — fall through to series page
+      }
+
+      // Fallback: Try series page scraping (works for recent puzzles with no API lag)
+      try {
+        const puzzle = await fetchGuardianPuzzleFromSeriesPage(seriesTag, date);
+        if (puzzle) {
+          return puzzle;
+        }
+      } catch (e) {
+        // Series page also failed
+      }
+
+      throw notFound(`No Guardian ${seriesTag} puzzle for ${date}`);
     }
   };
 }

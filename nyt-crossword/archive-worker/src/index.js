@@ -723,7 +723,7 @@ async function searchByClueText(clueText, env, mode = 'contains') {
         p.title
         FROM clues c
         JOIN puzzles p ON c.puzzle_id = p.puzzle_id
-        WHERE LOWER(c.clue_text) LIKE ?
+        WHERE c.clue_norm LIKE ?
       ORDER BY p.date DESC, c.direction, c.number
       LIMIT 100
     `;

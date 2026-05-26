@@ -60,7 +60,9 @@ function removeSensitiveFields(data) {
 }
 
 function parseSearchMode(mode, defaultMode = 'contains') {
-  return mode === 'exact' ? 'exact' : defaultMode;
+  if (mode === 'exact') return 'exact';
+  if (mode === 'contains') return 'contains';
+  return defaultMode;
 }
 
 function getHotCache(env) {
@@ -324,43 +326,48 @@ async function getRelatedClues(answer, env) {
     return successResponse(cached);
   }
 
+  // FIX: Single query with JOIN instead of N+1 queries
+  // Get all clues for matching answers, grouped by puzzle date
   const matches = await env.DB.prepare(`
-    SELECT c.clue_id, c.puzzle_id, c.number, c.direction, c.clue_text, c.answer, p.date, p.formatted_date, p.day_of_week, p.title
+    SELECT c2.clue_id, c2.puzzle_id, c2.number, c2.direction, c2.clue_text, c2.answer,
+           p.date, p.formatted_date, p.day_of_week, p.title,
+           c.answer AS matched_answer
     FROM clues c
     JOIN puzzles p ON p.puzzle_id = c.puzzle_id
+    JOIN clues c2 ON c2.puzzle_id = c.puzzle_id
     WHERE c.answer_norm = ?
-    ORDER BY p.date DESC
+    ORDER BY p.date DESC, c2.direction, c2.number
+    LIMIT 2500
   `).bind(normalized).all();
 
   const grouped = {};
-  for (const match of matches.results || []) {
-    if (!grouped[match.date]) {
-      const puzzleClues = await env.DB.prepare(`
-        SELECT clue_id, puzzle_id, number, direction, clue_text, answer
-        FROM clues
-        WHERE puzzle_id = ?
-        ORDER BY
-          CASE direction
-            WHEN 'across' THEN 0
-            WHEN 'down' THEN 1
-            ELSE 2
-          END,
-          number
-      `).bind(match.puzzle_id).all();
-
-      grouped[match.date] = {
-        date: match.date,
-        formatted_date: match.formatted_date,
-        day_of_week: match.day_of_week,
-        title: match.title,
-        clues: puzzleClues.results || []
+  for (const row of matches.results || []) {
+    if (!grouped[row.date]) {
+      grouped[row.date] = {
+        date: row.date,
+        formatted_date: row.formatted_date,
+        day_of_week: row.day_of_week,
+        title: row.title,
+        clues: []
       };
+    }
+    // Only add each clue once (deduplicate by clue_id)
+    const existing = grouped[row.date].clues.find(c => c.clue_id === row.clue_id);
+    if (!existing) {
+      grouped[row.date].clues.push({
+        clue_id: row.clue_id,
+        puzzle_id: row.puzzle_id,
+        number: row.number,
+        direction: row.direction,
+        clue_text: row.clue_text,
+        answer: row.answer
+      });
     }
   }
 
   const safe = removeSensitiveFields({
     answer,
-    occurrences: matches.results?.length || 0,
+    occurrences: Object.keys(grouped).length,
     appearances: Object.values(grouped)
   });
 
@@ -488,8 +495,9 @@ async function deletePuzzleByDate(date, env) {
 }
 
 function authorizeWrite(request, env, pathToken = null) {
+  // FIX: If no API_TOKEN is set, deny ALL write access (security)
   if (!env.API_TOKEN) {
-    return true;
+    return false;
   }
 
   const authToken = request.headers.get('Authorization');

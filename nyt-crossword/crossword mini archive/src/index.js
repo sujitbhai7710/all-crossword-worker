@@ -130,9 +130,10 @@ export default {
         headers: { 'Content-Type': 'application/json', ...corsHeaders },
       });
     } else {
-      // Default response for unknown routes
+      // Default response for unknown routes - return 404
       return new Response(JSON.stringify({
-        message: 'NYT Mini Crossword Archive API - Unknown Route',
+        success: false,
+        error: `Endpoint not found: ${path}`,
         endpoints: [
           { path: '/today', description: 'Get today\'s puzzle' },
           { path: '/date?date=YYYY-MM-DD', description: 'Get puzzle by date' },
@@ -141,6 +142,7 @@ export default {
           { path: '/formatted?date=YYYY-MM-DD', description: 'Get formatted puzzle like in crossword_solution.txt' }
         ]
       }), {
+        status: 404,
         headers: { 'Content-Type': 'application/json', ...corsHeaders },
       });
     }
@@ -387,7 +389,7 @@ async function searchByClue(searchTerm, env, corsHeaders = {}, mode = 'contains'
     ` : `
       SELECT date, direction, number, clue, answer
       FROM clues
-      WHERE LOWER(clue) LIKE ?
+      WHERE clue_norm LIKE ?
       ORDER BY date DESC
       LIMIT 100
     `).bind(isExact ? normalizedClue : `%${normalizedClue.replace(/[%_]/g, '')}%`);

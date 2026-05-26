@@ -46,24 +46,6 @@ npx wrangler d1 execute guardian_cryptic_archive --file=../../shared/migrations/
 npx wrangler deploy
 ```
 
-## Guardian Everyman
-
-```powershell
-cd workers/guardian-everyman
-npx wrangler d1 create guardian_everyman_archive
-# Copy the returned database_id into wrangler.toml
-npx wrangler kv namespace create HOT_CACHE
-# Copy the returned id into wrangler.toml as HOT_CACHE.id
-npx wrangler kv namespace create HOT_CACHE --preview
-# Copy the returned id into wrangler.toml as HOT_CACHE.preview_id
-npx wrangler secret put API_TOKEN
-# Optional: only if you want your own Guardian API key
-# npx wrangler secret put GUARDIAN_API_KEY
-npx wrangler d1 execute guardian_everyman_archive --file=../../shared/migrations/0000_initial_migration.sql --remote
-npx wrangler d1 execute guardian_everyman_archive --file=../../shared/migrations/0001_normalized_lookup_columns.sql --remote
-npx wrangler deploy
-```
-
 ## Guardian Prize
 
 ```powershell
@@ -115,24 +97,6 @@ npx wrangler secret put API_TOKEN
 # npx wrangler secret put GUARDIAN_API_KEY
 npx wrangler d1 execute guardian_quiptic_archive --file=../../shared/migrations/0000_initial_migration.sql --remote
 npx wrangler d1 execute guardian_quiptic_archive --file=../../shared/migrations/0001_normalized_lookup_columns.sql --remote
-npx wrangler deploy
-```
-
-## Guardian Speedy
-
-```powershell
-cd workers/guardian-speedy
-npx wrangler d1 create guardian_speedy_archive
-# Copy the returned database_id into wrangler.toml
-npx wrangler kv namespace create HOT_CACHE
-# Copy the returned id into wrangler.toml as HOT_CACHE.id
-npx wrangler kv namespace create HOT_CACHE --preview
-# Copy the returned id into wrangler.toml as HOT_CACHE.preview_id
-npx wrangler secret put API_TOKEN
-# Optional: only if you want your own Guardian API key
-# npx wrangler secret put GUARDIAN_API_KEY
-npx wrangler d1 execute guardian_speedy_archive --file=../../shared/migrations/0000_initial_migration.sql --remote
-npx wrangler d1 execute guardian_speedy_archive --file=../../shared/migrations/0001_normalized_lookup_columns.sql --remote
 npx wrangler deploy
 ```
 
@@ -202,22 +166,6 @@ npx wrangler d1 execute usa_today_daily_archive --file=../../shared/migrations/0
 npx wrangler deploy
 ```
 
-## USA Today Quick
-
-```powershell
-cd workers/usa-today-quick
-npx wrangler d1 create usa_today_quick_archive
-# Copy the returned database_id into wrangler.toml
-npx wrangler kv namespace create HOT_CACHE
-# Copy the returned id into wrangler.toml as HOT_CACHE.id
-npx wrangler kv namespace create HOT_CACHE --preview
-# Copy the returned id into wrangler.toml as HOT_CACHE.preview_id
-npx wrangler secret put API_TOKEN
-npx wrangler d1 execute usa_today_quick_archive --file=../../shared/migrations/0000_initial_migration.sql --remote
-npx wrangler d1 execute usa_today_quick_archive --file=../../shared/migrations/0001_normalized_lookup_columns.sql --remote
-npx wrangler deploy
-```
-
 ## Washington Post Daily
 
 ```powershell
@@ -263,5 +211,117 @@ npx wrangler kv namespace create HOT_CACHE --preview
 npx wrangler secret put API_TOKEN
 npx wrangler d1 execute washington_post_sunday_archive --file=../../shared/migrations/0000_initial_migration.sql --remote
 npx wrangler d1 execute washington_post_sunday_archive --file=../../shared/migrations/0001_normalized_lookup_columns.sql --remote
+npx wrangler deploy
+```
+
+## New Yorker
+
+```powershell
+cd workers/new-yorker
+npx wrangler d1 create new_yorker_crossword_archive
+# Copy the returned database_id into wrangler.toml
+npx wrangler kv namespace create HOT_CACHE
+# Copy the returned id into wrangler.toml as HOT_CACHE.id
+npx wrangler kv namespace create HOT_CACHE --preview
+# Copy the returned id into wrangler.toml as HOT_CACHE.preview_id
+npx wrangler secret put API_TOKEN
+npx wrangler d1 execute new_yorker_crossword_archive --file=../../shared/migrations/0000_initial_migration.sql --remote
+npx wrangler d1 execute new_yorker_crossword_archive --file=../../shared/migrations/0001_normalized_lookup_columns.sql --remote
+npx wrangler deploy
+```
+
+## New Yorker Mini
+
+```powershell
+cd workers/new-yorker-mini
+npx wrangler d1 create new_yorker_mini_archive
+# Copy the returned database_id into wrangler.toml
+npx wrangler kv namespace create HOT_CACHE
+# Copy the returned id into wrangler.toml as HOT_CACHE.id
+npx wrangler kv namespace create HOT_CACHE --preview
+# Copy the returned id into wrangler.toml as HOT_CACHE.preview_id
+npx wrangler secret put API_TOKEN
+npx wrangler d1 execute new_yorker_mini_archive --file=../../shared/migrations/0000_initial_migration.sql --remote
+npx wrangler d1 execute new_yorker_mini_archive --file=../../shared/migrations/0001_normalized_lookup_columns.sql --remote
+npx wrangler deploy
+```
+
+## Universal
+
+```powershell
+cd workers/universal
+npx wrangler d1 create universal_crossword_archive
+# Copy the returned database_id into wrangler.toml
+npx wrangler kv namespace create HOT_CACHE
+# Copy the returned id into wrangler.toml as HOT_CACHE.id
+npx wrangler kv namespace create HOT_CACHE --preview
+# Copy the returned id into wrangler.toml as HOT_CACHE.preview_id
+npx wrangler secret put API_TOKEN
+npx wrangler d1 execute universal_crossword_archive --file=../../shared/migrations/0000_initial_migration.sql --remote
+npx wrangler d1 execute universal_crossword_archive --file=../../shared/migrations/0001_normalized_lookup_columns.sql --remote
+npx wrangler deploy
+```
+
+## Newsday
+
+```powershell
+cd workers/newsday
+npx wrangler d1 create newsday_crossword_archive
+# Copy the returned database_id into wrangler.toml
+npx wrangler kv namespace create HOT_CACHE
+# Copy the returned id into wrangler.toml as HOT_CACHE.id
+npx wrangler kv namespace create HOT_CACHE --preview
+# Copy the returned id into wrangler.toml as HOT_CACHE.preview_id
+npx wrangler secret put API_TOKEN
+npx wrangler d1 execute newsday_crossword_archive --file=../../shared/migrations/0000_initial_migration.sql --remote
+npx wrangler d1 execute newsday_crossword_archive --file=../../shared/migrations/0001_normalized_lookup_columns.sql --remote
+npx wrangler deploy
+```
+
+## Vox
+
+```powershell
+cd workers/vox
+npx wrangler d1 create vox_crossword_archive
+# Copy the returned database_id into wrangler.toml
+npx wrangler kv namespace create HOT_CACHE
+# Copy the returned id into wrangler.toml as HOT_CACHE.id
+npx wrangler kv namespace create HOT_CACHE --preview
+# Copy the returned id into wrangler.toml as HOT_CACHE.preview_id
+npx wrangler secret put API_TOKEN
+npx wrangler d1 execute vox_crossword_archive --file=../../shared/migrations/0000_initial_migration.sql --remote
+npx wrangler d1 execute vox_crossword_archive --file=../../shared/migrations/0001_normalized_lookup_columns.sql --remote
+npx wrangler deploy
+```
+
+## Daily Pop
+
+```powershell
+cd workers/daily-pop
+npx wrangler d1 create daily_pop_archive
+# Copy the returned database_id into wrangler.toml
+npx wrangler kv namespace create HOT_CACHE
+# Copy the returned id into wrangler.toml as HOT_CACHE.id
+npx wrangler kv namespace create HOT_CACHE --preview
+# Copy the returned id into wrangler.toml as HOT_CACHE.preview_id
+npx wrangler secret put API_TOKEN
+npx wrangler d1 execute daily_pop_archive --file=../../shared/migrations/0000_initial_migration.sql --remote
+npx wrangler d1 execute daily_pop_archive --file=../../shared/migrations/0001_normalized_lookup_columns.sql --remote
+npx wrangler deploy
+```
+
+## NYT Midi
+
+```powershell
+cd workers/nyt-midi
+npx wrangler d1 create nyt_midi_archive
+# Copy the returned database_id into wrangler.toml
+npx wrangler kv namespace create HOT_CACHE
+# Copy the returned id into wrangler.toml as HOT_CACHE.id
+npx wrangler kv namespace create HOT_CACHE --preview
+# Copy the returned id into wrangler.toml as HOT_CACHE.preview_id
+npx wrangler secret put API_TOKEN
+npx wrangler d1 execute nyt_midi_archive --file=../../shared/migrations/0000_initial_migration.sql --remote
+npx wrangler d1 execute nyt_midi_archive --file=../../shared/migrations/0001_normalized_lookup_columns.sql --remote
 npx wrangler deploy
 ```

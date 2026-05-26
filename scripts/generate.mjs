@@ -22,14 +22,26 @@ function entrySource(worker) {
       return `import { createArchiveWorker } from '../../../shared/core/createArchiveWorker.js';\nimport { createLatimesMiniProvider } from '../../../shared/providers/latimes.js';\n\nexport default createArchiveWorker(createLatimesMiniProvider());\n`;
     case 'usa-today-daily':
       return `import { createArchiveWorker } from '../../../shared/core/createArchiveWorker.js';\nimport { createUsaTodayDailyProvider } from '../../../shared/providers/usaToday.js';\n\nexport default createArchiveWorker(createUsaTodayDailyProvider());\n`;
-    case 'usa-today-quick':
-      return `import { createArchiveWorker } from '../../../shared/core/createArchiveWorker.js';\nimport { createUsaTodayQuickProvider } from '../../../shared/providers/usaToday.js';\n\nexport default createArchiveWorker(createUsaTodayQuickProvider());\n`;
     case 'wapo-daily':
       return `import { createArchiveWorker } from '../../../shared/core/createArchiveWorker.js';\nimport { createWashingtonPostDailyProvider } from '../../../shared/providers/washingtonPost.js';\n\nexport default createArchiveWorker(createWashingtonPostDailyProvider());\n`;
     case 'wapo-mini':
       return `import { createArchiveWorker } from '../../../shared/core/createArchiveWorker.js';\nimport { createWashingtonPostMiniProvider } from '../../../shared/providers/washingtonPost.js';\n\nexport default createArchiveWorker(createWashingtonPostMiniProvider());\n`;
     case 'wapo-sunday':
       return `import { createArchiveWorker } from '../../../shared/core/createArchiveWorker.js';\nimport { createWashingtonPostSundayProvider } from '../../../shared/providers/washingtonPost.js';\n\nexport default createArchiveWorker(createWashingtonPostSundayProvider());\n`;
+    case 'new-yorker':
+      return `import { createArchiveWorker } from '../../../shared/core/createArchiveWorker.js';\nimport { createNewYorkerProvider } from '../../../shared/providers/newYorker.js';\n\nexport default createArchiveWorker(createNewYorkerProvider());\n`;
+    case 'new-yorker-mini':
+      return `import { createArchiveWorker } from '../../../shared/core/createArchiveWorker.js';\nimport { createNewYorkerMiniProvider } from '../../../shared/providers/newYorker.js';\n\nexport default createArchiveWorker(createNewYorkerMiniProvider());\n`;
+    case 'universal':
+      return `import { createArchiveWorker } from '../../../shared/core/createArchiveWorker.js';\nimport { createUniversalProvider } from '../../../shared/providers/universal.js';\n\nexport default createArchiveWorker(createUniversalProvider());\n`;
+    case 'newsday':
+      return `import { createArchiveWorker } from '../../../shared/core/createArchiveWorker.js';\nimport { createNewsdayProvider } from '../../../shared/providers/newsday.js';\n\nexport default createArchiveWorker(createNewsdayProvider());\n`;
+    case 'vox':
+      return `import { createArchiveWorker } from '../../../shared/core/createArchiveWorker.js';\nimport { createVoxProvider } from '../../../shared/providers/vox.js';\n\nexport default createArchiveWorker(createVoxProvider());\n`;
+    case 'daily-pop':
+      return `import { createArchiveWorker } from '../../../shared/core/createArchiveWorker.js';\nimport { createDailyPopProvider } from '../../../shared/providers/dailyPop.js';\n\nexport default createArchiveWorker(createDailyPopProvider());\n`;
+    case 'nyt-midi':
+      return `import { createArchiveWorker } from '../../../shared/core/createArchiveWorker.js';\nimport { createNytMidiProvider } from '../../../shared/providers/nyt.js';\n\nexport default createArchiveWorker(createNytMidiProvider());\n`;
     default:
       throw new Error(`Unknown worker family: ${worker.family}`);
   }
