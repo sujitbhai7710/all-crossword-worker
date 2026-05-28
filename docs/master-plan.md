@@ -1398,3 +1398,780 @@ Test date: 2026-05-25
 | Shared (NYT v6) | 1 | NYT Midi |
 | Standalone NYT | 2 | NYT Daily, NYT Mini |
 | Solver | 1 | Solver API |
+
+---
+
+## PART 7: PUZZLE ANALYTICS — xwordinfo.com-Style Statistical Analysis (Category 1 + Category 2)
+
+**Added**: 2026-05-27
+**Scope**: ALL 19 shared workers (NYT Daily/Mini NOT included — separate deployments)
+**Reference Site**: https://www.xwordinfo.com/Crossword?date=5/22/2026
+**Architecture**: Compute-at-ingest + one new DB table + new `/api/stats/{date}` endpoint
+
+---
+
+### 7.0 The Grid Data Problem — CRITICAL PRE-REQUISITE
+
+The current system stores **only puzzle metadata + clue text + answers** in the `puzzles` and `clues` tables. It does NOT store:
+- Grid dimensions (width, height)
+- Grid layout (which cells are black/white)
+- Cell positions (which answer goes where)
+
+Without grid data, Category 2 features (cheater squares, open squares, grid flow) are **IMPOSSIBLE**. The raw puzzle data from providers DOES contain grid information, but `normalizePuzzlePayload()` in `shared/core/utils.js` currently **discards it** during normalization.
+
+#### Data Availability Per Provider (Verified by Reading Source Code)
+
+| # | Worker | Provider Type | Has Grid? | Has Width/Height? | Category 2 Possible? | Notes |
+|---|--------|--------------|-----------|-------------------|---------------------|-------|
+| 1 | Atlantic | AmuseLabs | ✅ Full grid (`xwordData.box`, `.w`, `.h`) | ✅ | ✅ YES | Grid available in rawc but currently discarded by `normalizePuzzlePayload()` |
+| 2 | Guardian Cryptic | Guardian API | ⚠️ Partial (entries with positions + dimensions) | ✅ (`dimensions.cols`, `.rows`) | 🟡 Needs reconstruction | `pageData.entries` has position data, `pageData.dimensions` has width/height |
+| 3 | Guardian Prize | Guardian API | ⚠️ Partial | ✅ | 🟡 Needs reconstruction | Same as above |
+| 4 | Guardian Quick | Guardian API | ⚠️ Partial | ✅ | 🟡 Needs reconstruction | Same as above |
+| 5 | Guardian Quiptic | Guardian API | ⚠️ Partial | ✅ | 🟡 Needs reconstruction | Same as above |
+| 6 | Guardian Weekend | Guardian API | ⚠️ Partial | ✅ | 🟡 Needs reconstruction | Same as above |
+| 7 | LA Times Daily | uclick XML | ❌ NO grid data | ❌ | ❌ NO — clue answers only | uclick XML only provides `<across>` and `<down>` clue blocks with answers, no grid layout |
+| 8 | LA Times Mini | AmuseLabs | ✅ Full grid | ✅ | ✅ YES | Same as Atlantic |
+| 9 | USA Today Daily | uclick XML | ❌ NO grid data | ❌ | ❌ NO — clue answers only | Same limitation as LA Times Daily |
+| 10 | WaPo Daily | WaPo JSON | ✅ Cells with `.answer`, `.number` + words with `.indexes` | ✅ Implied by cells | ✅ YES | `json.cells` array has all position data |
+| 11 | WaPo Mini | WaPo JSON | ✅ Cells with positions | ✅ | ✅ YES | Same as WaPo Daily |
+| 12 | WaPo Sunday | WaPo JSON | ✅ Cells with positions | ✅ | ✅ YES | Same as WaPo Daily |
+| 13 | New Yorker | xd format | ✅ Full grid with `#` markers | ✅ (gridLines.length, gridLines[0].length) | ✅ YES | `parseXdFormat()` already computes width/height but doesn't pass them through |
+| 14 | New Yorker Mini | xd format | ✅ Full grid with `#` markers | ✅ | ✅ YES | Same as New Yorker |
+| 15 | Universal | AM Universal | ✅ Solution grid (`Line1`, `Line2`...) + Width + Height | ✅ (`json.Width`, `json.Height`) | ✅ YES | `extractAnswersFromSolution()` already builds grid internally |
+| 16 | Newsday | AmuseLabs | ✅ Full grid | ✅ | ✅ YES | Same as Atlantic |
+| 17 | Vox | AmuseLabs | ✅ Full grid | ✅ | ✅ YES | Same as Atlantic |
+| 18 | Daily Pop | CC XML | ✅ Cell elements with `solution`, `x`, `y` attributes | ✅ Implied by cells | ✅ YES | `parseCrosswordCompilerXml()` has grid map |
+| 19 | NYT Midi | NYT v6 API | ✅ `cells` array with `.answer`, `.type` | ✅ Implied by cells | ✅ YES | `parseNytPuzzle()` has access to `puzzleBody.cells` |
+
+#### Category Support Matrix
+
+| Feature Category | Workers With FULL Support | Workers With PARTIAL Support |
+|-----------------|--------------------------|----------------------------|
+| **Category 1** (clue-only stats) | ALL 19 workers | — |
+| **Category 2** (grid-dependent stats) | 17 workers (all EXCEPT LA Times Daily, USA Today Daily) | 2 workers (uclick XML — no grid data) |
+
+**For LA Times Daily and USA Today Daily**: Category 1 features work fully. Category 2 features (cheater squares, open squares, grid flow, freshness grid) will return `null` values with a `grid_unavailable: true` flag.
+
+---
+
+### 7.1 Feature List — What We're Adding
+
+#### CATEGORY 1: 🟢 Zero DB Changes — Compute From Existing Data
+
+These features need ONLY the `clues` table (answer text, clue text, answer_len, direction, number). No new tables, no migrations. Compute at ingest time, store in KV cache.
+
+| # | Feature | Data Source | Display On Site | Example (xwordinfo) |
+|---|---------|------------|----------------|---------------------|
+| 1 | Word count | `COUNT(*)` from clues | Stats panel | "78 words" |
+| 2 | Scrabble score | Sum of letter scores from all answers | Stats panel | "Score: 294, Average: 3.77" |
+| 3 | Average word length | `AVG(answer_len)` from clues | Stats panel | "Average length: 5.2" |
+| 4 | Word length distribution | `GROUP BY answer_len` | Bar chart | 3-letter: 12, 4-letter: 20, etc. |
+| 5 | Letter distribution | Concatenate all answers, count each letter | Bar chart | A:45, B:8, C:12... |
+| 6 | Missing letters | Letters with 0 count in distribution | Highlight box | "Missing: J, Q, X, Z" |
+| 7 | Pangram check | All 26 letters present? | Badge | "PANGRAM!" or not |
+| 8 | Fill-in-the-blank clue count | `clue_text LIKE '%___%'` or `LIKE '%_%'` | Stats panel | "Fill-in-the-blank: 5" |
+| 9 | Day of week | Already stored in `puzzles.day_of_week` | Stats panel | "Thursday" |
+| 10 | Constructor name | Already stored in `puzzles.author` | Stats panel | "By: Kameron Austin Collins" |
+| 11 | Answer uniqueness within puzzle | Count duplicate answers | Stats panel | "Unique answers: 74/78" |
+| 12 | Across vs Down split | `COUNT(*) GROUP BY direction` | Stats panel | "Across: 38, Down: 40" |
+| 13 | Longest / shortest answer | `MAX/MIN(answer_len)` with answer text | Stats panel | "Longest: SWASHBUCKLER (13)" |
+| 14 | AI-generated puzzle summary | LLM call with puzzle data as context | Analysis panel | "This Thursday puzzle features..." |
+
+#### CATEGORY 2: 🟡 One New Table — No Existing Table Changes
+
+These features need grid layout data (which cells are black/white, dimensions). Requires passing grid data through the pipeline and computing analytics at ingest time.
+
+| # | Feature | Data Source | Display On Site | Example (xwordinfo) |
+|---|---------|------------|----------------|---------------------|
+| 15 | Grid dimensions | `width` x `height` from provider | Stats panel | "15 x 15 grid" |
+| 16 | Block count | Count black cells in grid | Stats panel | "Blocks: 42" |
+| 17 | Cheater square detection | Black squares bordered by 3+ word starts | Stats panel + grid overlay | "Cheater squares: 4" |
+| 18 | Open squares count | White squares bordered by 3+ black squares | Stats panel | "Open squares: 2" |
+| 19 | Grid flow calculation | Ratio of longest connected path to total white cells | Stats panel | "Grid flow: 0.87" |
+| 20 | Freshness score | % of answers not seen in previous puzzles in this worker's DB | Stats panel + colorized grid | "Freshness: 72%" |
+| 21 | Colorized freshness grid | Per-cell color based on answer frequency | Grid visualization | Green=new, yellow=rare, red=common |
+
+---
+
+### 7.2 Database Schema — New Migration (0002)
+
+**File**: `shared/migrations/0002_puzzle_analytics.sql`
+
+This is an **additive-only** migration. No existing tables are altered. No existing indexes are changed. No existing data is affected. Rolling back = `DROP TABLE puzzle_analytics`.
+
+```sql
+-- Puzzle Analytics Table
+-- Stores pre-computed statistical analysis for each puzzle
+-- Computed at ingest time (inside savePuzzleToDatabase) so no per-request computation
+-- All grid-dependent columns will be NULL for providers that lack grid data (uclick XML)
+
+CREATE TABLE IF NOT EXISTS puzzle_analytics (
+    puzzle_id INTEGER PRIMARY KEY,
+    
+    -- Category 1: Clue-based stats (available for ALL workers)
+    word_count INTEGER NOT NULL,
+    across_count INTEGER NOT NULL,
+    down_count INTEGER NOT NULL,
+    scrabble_score INTEGER NOT NULL,
+    scrabble_average REAL NOT NULL,
+    avg_word_length REAL NOT NULL,
+    word_length_dist TEXT NOT NULL,         -- JSON: {"3":12,"4":20,"5":18,...}
+    letter_dist TEXT NOT NULL,              -- JSON: {"A":45,"B":8,"C":12,...}
+    missing_letters TEXT NOT NULL,          -- JSON: ["J","Q","X","Z"]
+    is_pangram INTEGER NOT NULL DEFAULT 0,  -- 1 if all 26 letters present
+    fill_blank_count INTEGER NOT NULL DEFAULT 0,
+    unique_answer_count INTEGER NOT NULL,
+    longest_answer TEXT NOT NULL DEFAULT '',
+    longest_answer_len INTEGER NOT NULL DEFAULT 0,
+    shortest_answer TEXT NOT NULL DEFAULT '',
+    shortest_answer_len INTEGER NOT NULL DEFAULT 0,
+    
+    -- Category 2: Grid-based stats (NULL for uclick XML providers)
+    grid_width INTEGER,                    -- NULL if grid data unavailable
+    grid_height INTEGER,                   -- NULL if grid data unavailable
+    block_count INTEGER,                   -- NULL if grid data unavailable
+    cheater_count INTEGER,                 -- NULL if grid data unavailable
+    open_squares INTEGER,                  -- NULL if grid data unavailable
+    grid_flow REAL,                        -- NULL if grid data unavailable
+    freshness_score REAL,                  -- NULL if grid data unavailable (needs historical data)
+    grid_unavailable INTEGER NOT NULL DEFAULT 0,  -- 1 if provider lacks grid data
+    
+    computed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (puzzle_id) REFERENCES puzzles(puzzle_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_analytics_puzzle_id ON puzzle_analytics(puzzle_id);
+CREATE INDEX IF NOT EXISTS idx_analytics_pangram ON puzzle_analytics(is_pangram);
+CREATE INDEX IF NOT EXISTS idx_analytics_freshness ON puzzle_analytics(freshness_score);
+```
+
+**Deployment**: Run for EACH worker's D1 database:
+```powershell
+npx wrangler d1 execute {databaseName} --file=../../shared/migrations/0002_puzzle_analytics.sql --remote
+```
+
+---
+
+### 7.3 Pipeline Changes — How Grid Data Flows Through
+
+The key change: `normalizePuzzlePayload()` must accept and pass grid data so `savePuzzleToDatabase()` can compute analytics before discarding the grid.
+
+#### Step 1: Modify `shared/core/utils.js` — `normalizePuzzlePayload()`
+
+Add three optional fields to the normalized payload:
+
+```javascript
+export function normalizePuzzlePayload(payload) {
+  return {
+    date: payload.date,
+    formatted_date: payload.formatted_date || getFormattedDate(payload.date),
+    title: repairMojibake(payload.title || ''),
+    author: repairMojibake(payload.author || ''),
+    editor: repairMojibake(payload.editor || ''),
+    day_of_week: payload.day_of_week || getDayOfWeek(payload.date),
+    permalink: payload.permalink || '',
+    // NEW: Grid data for analytics (transient — NOT stored in DB permanently)
+    grid: payload.grid || null,            // 2D array: grid[row][col] = letter or null (black cell)
+    grid_width: payload.grid_width || payload.width || null,
+    grid_height: payload.grid_height || payload.height || null,
+    clues: sortClues(
+      (payload.clues || [])
+        .map((clue) => {
+          // ... existing clue normalization unchanged
+        })
+        .filter((clue) => Number.isFinite(clue.number) && clue.clue_text && clue.answer)
+    )
+  };
+}
+```
+
+#### Step 2: Modify Each Provider to Pass Grid Data
+
+**AmuseLabs providers** (Atlantic, LA Times Mini, Newsday, Vox):
+`parseAmusePuzzle()` in `shared/core/amuselabs.js` already builds the `grid` 2D array and has `width`/`height`. Just pass them through to `normalizePuzzlePayload()`:
+
+```javascript
+// In parseAmusePuzzle(), change the return to include grid:
+return normalizePuzzlePayload({
+    date: puzzleDate,
+    formatted_date: defaults.formatted_date,
+    day_of_week: defaults.day_of_week,
+    title: xwordData.title || defaults.title || '',
+    author: xwordData.author || defaults.author || '',
+    editor: xwordData.editor || defaults.editor || '',
+    permalink: defaults.permalink || '',
+    grid,           // NEW: 2D array already computed
+    grid_width: width,   // NEW
+    grid_height: height, // NEW
+    clues
+});
+```
+
+**New Yorker** (xd format): `parseXdFormat()` already computes `width`, `height`, and `gridLines`. Convert to 2D array:
+
+```javascript
+// Build grid from gridLines (# = black, letter = white)
+const grid = gridLines.map(line => 
+    [...line].map(ch => ch === '#' ? null : ch)
+);
+// Pass grid, grid_width: width, grid_height: height to normalizePuzzlePayload()
+```
+
+**Guardian**: Extract `pageData.dimensions.rows` and `pageData.dimensions.cols`, then reconstruct grid from `pageData.entries` position data.
+
+**WaPo**: Reconstruct grid from `json.cells` array using cell indexes.
+
+**Universal**: `extractAnswersFromSolution()` already builds a grid. Pass it through.
+
+**Daily Pop**: `parseCrosswordCompilerXml()` already builds `gridMap`. Convert to 2D array.
+
+**NYT Midi**: Reconstruct grid from `puzzleBody.cells` array.
+
+**uclick XML** (LA Times Daily, USA Today Daily): Pass `grid: null, grid_width: null, grid_height: null`. These workers will have `grid_unavailable: 1`.
+
+#### Step 3: Modify `savePuzzleToDatabase()` in `shared/core/createArchiveWorker.js`
+
+After saving puzzle + clues, compute analytics and insert into `puzzle_analytics`:
+
+```javascript
+// After the clue insertion loop, add:
+const analytics = computePuzzleAnalytics(puzzle, puzzleId, env);
+await env.DB.prepare(`
+    INSERT OR REPLACE INTO puzzle_analytics (
+        puzzle_id, word_count, across_count, down_count,
+        scrabble_score, scrabble_average, avg_word_length,
+        word_length_dist, letter_dist, missing_letters, is_pangram,
+        fill_blank_count, unique_answer_count,
+        longest_answer, longest_answer_len, shortest_answer, shortest_answer_len,
+        grid_width, grid_height, block_count, cheater_count,
+        open_squares, grid_flow, freshness_score, grid_unavailable
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`).bind(
+    puzzleId,
+    analytics.word_count,
+    analytics.across_count,
+    analytics.down_count,
+    analytics.scrabble_score,
+    analytics.scrabble_average,
+    analytics.avg_word_length,
+    JSON.stringify(analytics.word_length_dist),
+    JSON.stringify(analytics.letter_dist),
+    JSON.stringify(analytics.missing_letters),
+    analytics.is_pangram ? 1 : 0,
+    analytics.fill_blank_count,
+    analytics.unique_answer_count,
+    analytics.longest_answer,
+    analytics.longest_answer_len,
+    analytics.shortest_answer,
+    analytics.shortest_answer_len,
+    analytics.grid_width,
+    analytics.grid_height,
+    analytics.block_count,
+    analytics.cheater_count,
+    analytics.open_squares,
+    analytics.grid_flow,
+    analytics.freshness_score,
+    analytics.grid_unavailable ? 1 : 0
+).run();
+```
+
+---
+
+### 7.4 New File: `shared/core/analytics.js`
+
+This is the core computation module. All analytics functions are pure and testable.
+
+```javascript
+// Scrabble letter scores
+const SCRABBLE_SCORES = {
+    'A':1,'E':1,'I':1,'L':1,'N':1,'O':1,'R':1,'S':1,'T':1,'U':1,
+    'D':2,'G':2, 'B':3,'C':3,'M':3,'P':3,
+    'F':4,'H':4,'V':4,'W':4,'Y':4,
+    'K':5, 'J':8,'X':8, 'Q':10,'Z':10
+};
+
+export function computePuzzleAnalytics(puzzle, puzzleId, env) {
+    const clues = puzzle.clues || [];
+    const answers = clues.map(c => c.answer || '');
+    const allLetters = answers.join('').toUpperCase();
+    
+    // Category 1: Clue-based stats
+    const word_count = clues.length;
+    const across_count = clues.filter(c => c.direction === 'across').length;
+    const down_count = clues.filter(c => c.direction === 'down').length;
+    
+    // Scrabble score
+    let scrabble_score = 0;
+    for (const ch of allLetters) {
+        scrabble_score += SCRABBLE_SCORES[ch] || 0;
+    }
+    const scrabble_average = word_count > 0 ? scrabble_score / word_count : 0;
+    
+    // Average word length
+    const totalLen = answers.reduce((sum, a) => sum + a.length, 0);
+    const avg_word_length = word_count > 0 ? totalLen / word_count : 0;
+    
+    // Word length distribution
+    const word_length_dist = {};
+    for (const a of answers) {
+        const len = a.length;
+        word_length_dist[len] = (word_length_dist[len] || 0) + 1;
+    }
+    
+    // Letter distribution
+    const letter_dist = {};
+    for (let i = 65; i <= 90; i++) { // A-Z
+        letter_dist[String.fromCharCode(i)] = 0;
+    }
+    for (const ch of allLetters) {
+        if (letter_dist[ch] !== undefined) letter_dist[ch]++;
+    }
+    
+    // Missing letters
+    const missing_letters = Object.entries(letter_dist)
+        .filter(([_, count]) => count === 0)
+        .map(([letter]) => letter);
+    
+    // Pangram check
+    const is_pangram = missing_letters.length === 0;
+    
+    // Fill-in-the-blank count
+    const fill_blank_count = clues.filter(c => 
+        c.clue_text && (c.clue_text.includes('___') || c.clue_text.includes('_____'))
+    ).length;
+    
+    // Answer uniqueness
+    const answerCounts = {};
+    for (const a of answers) {
+        answerCounts[a] = (answerCounts[a] || 0) + 1;
+    }
+    const unique_answer_count = Object.keys(answerCounts).length;
+    
+    // Longest / shortest answer
+    let longest_answer = '', longest_answer_len = 0;
+    let shortest_answer = '', shortest_answer_len = Infinity;
+    for (const a of answers) {
+        if (a.length > longest_answer_len) {
+            longest_answer = a; longest_answer_len = a.length;
+        }
+        if (a.length < shortest_answer_len && a.length > 0) {
+            shortest_answer = a; shortest_answer_len = a.length;
+        }
+    }
+    if (shortest_answer_len === Infinity) shortest_answer_len = 0;
+    
+    // Category 2: Grid-based stats
+    const grid = puzzle.grid;
+    const grid_width = puzzle.grid_width;
+    const grid_height = puzzle.grid_height;
+    
+    if (!grid || !grid_width || !grid_height) {
+        // Grid data unavailable (uclick XML providers)
+        return {
+            word_count, across_count, down_count,
+            scrabble_score, scrabble_average, avg_word_length,
+            word_length_dist, letter_dist, missing_letters, is_pangram,
+            fill_blank_count, unique_answer_count,
+            longest_answer, longest_answer_len,
+            shortest_answer, shortest_answer_len,
+            grid_width: null, grid_height: null,
+            block_count: null, cheater_count: null,
+            open_squares: null, grid_flow: null,
+            freshness_score: null,
+            grid_unavailable: true
+        };
+    }
+    
+    // Block count
+    let block_count = 0;
+    for (let r = 0; r < grid_height; r++) {
+        for (let c = 0; c < grid_width; c++) {
+            if (!grid[r] || grid[r][c] === null) block_count++;
+        }
+    }
+    
+    // Cheater squares: black cells where 3+ of 4 neighbors are word-start cells
+    const cheater_count = countCheaterSquares(grid, grid_width, grid_height);
+    
+    // Open squares: white cells with 3+ black neighbors
+    const open_squares = countOpenSquares(grid, grid_width, grid_height);
+    
+    // Grid flow: ratio of connected white cells to total white cells
+    const grid_flow = computeGridFlow(grid, grid_width, grid_height);
+    
+    // Freshness score: % of answers not seen in previous puzzles
+    // NOTE: This requires async DB query, will be handled separately in savePuzzleToDatabase
+    const freshness_score = null; // Computed async after insertion
+    
+    return {
+        word_count, across_count, down_count,
+        scrabble_score, scrabble_average, avg_word_length,
+        word_length_dist, letter_dist, missing_letters, is_pangram,
+        fill_blank_count, unique_answer_count,
+        longest_answer, longest_answer_len,
+        shortest_answer, shortest_answer_len,
+        grid_width, grid_height, block_count,
+        cheater_count, open_squares, grid_flow,
+        freshness_score,
+        grid_unavailable: false
+    };
+}
+
+function countCheaterSquares(grid, width, height) {
+    // A cheater square is a black cell where at least 3 of its 4 orthogonal neighbors
+    // are word-start cells (cells that begin an across or down entry)
+    // This requires knowing which cells are word starts, which we derive from the grid
+    
+    const isBlack = (r, c) => r < 0 || r >= height || c < 0 || c >= width || !grid[r] || grid[r][c] === null;
+    
+    // Find word-start cells using standard crossword numbering rules
+    const wordStarts = new Set();
+    for (let r = 0; r < height; r++) {
+        for (let c = 0; c < width; c++) {
+            if (isBlack(r, c)) continue;
+            const startsAcross = (c === 0 || isBlack(r, c-1)) && c+1 < width && !isBlack(r, c+1);
+            const startsDown = (r === 0 || isBlack(r-1, c)) && r+1 < height && !isBlack(r+1, c);
+            if (startsAcross || startsDown) {
+                wordStarts.add(`${r},${c}`);
+            }
+        }
+    }
+    
+    let count = 0;
+    for (let r = 0; r < height; r++) {
+        for (let c = 0; c < width; c++) {
+            if (!isBlack(r, c)) continue; // Only black cells
+            const neighbors = [
+                [r-1, c], [r+1, c], [r, c-1], [r, c+1]
+            ];
+            const wordStartNeighbors = neighbors.filter(([nr, nc]) => 
+                wordStarts.has(`${nr},${nc}`)
+            ).length;
+            if (wordStartNeighbors >= 3) count++;
+        }
+    }
+    return count;
+}
+
+function countOpenSquares(grid, width, height) {
+    const isBlack = (r, c) => r < 0 || r >= height || c < 0 || c >= width || !grid[r] || grid[r][c] === null;
+    let count = 0;
+    for (let r = 0; r < height; r++) {
+        for (let c = 0; c < width; c++) {
+            if (isBlack(r, c)) continue; // Only white cells
+            const blackNeighbors = [
+                isBlack(r-1, c), isBlack(r+1, c),
+                isBlack(r, c-1), isBlack(r, c+1)
+            ].filter(Boolean).length;
+            if (blackNeighbors >= 3) count++;
+        }
+    }
+    return count;
+}
+
+function computeGridFlow(grid, width, height) {
+    const isBlack = (r, c) => r < 0 || r >= height || c < 0 || c >= width || !grid[r] || grid[r][c] === null;
+    
+    // Count total white cells
+    let totalWhite = 0;
+    for (let r = 0; r < height; r++) {
+        for (let c = 0; c < width; c++) {
+            if (!isBlack(r, c)) totalWhite++;
+        }
+    }
+    if (totalWhite === 0) return 0;
+    
+    // BFS from first white cell to measure connectivity
+    const visited = new Set();
+    const queue = [];
+    for (let r = 0; r < height && queue.length === 0; r++) {
+        for (let c = 0; c < width && queue.length === 0; c++) {
+            if (!isBlack(r, c)) queue.push([r, c]);
+        }
+    }
+    
+    while (queue.length > 0) {
+        const [r, c] = queue.shift();
+        const key = `${r},${c}`;
+        if (visited.has(key)) continue;
+        if (isBlack(r, c)) continue;
+        visited.add(key);
+        queue.push([r-1, c], [r+1, c], [r, c-1], [r, c+1]);
+    }
+    
+    return visited.size / totalWhite;
+}
+```
+
+---
+
+### 7.5 Freshness Score — Async Computation
+
+The freshness score requires querying the D1 database for historical answer frequencies. This is computed **async** in `savePuzzleToDatabase()` after the puzzle and analytics are inserted:
+
+```javascript
+// After inserting puzzle_analytics row, compute freshness score
+async function computeFreshnessScore(puzzle, puzzleId, env) {
+    const clues = puzzle.clues || [];
+    if (clues.length === 0) return 0;
+    
+    // Count how many answers in this puzzle have appeared in PREVIOUS puzzles
+    const answers = [...new Set(clues.map(c => (c.answer || '').toUpperCase()))];
+    let freshCount = 0;
+    
+    // Check each answer against historical data
+    // Using a single query with IN clause for efficiency
+    const placeholders = answers.map(() => '?').join(',');
+    const result = await env.DB.prepare(`
+        SELECT DISTINCT answer_norm
+        FROM clues
+        WHERE answer_norm IN (${placeholders})
+        AND puzzle_id != ?
+    `).bind(...answers, puzzleId).all();
+    
+    const historicalAnswers = new Set(
+        (result.results || []).map(r => r.answer_norm)
+    );
+    
+    for (const answer of answers) {
+        const norm = answer.replace(/\s+/g, '');
+        if (!historicalAnswers.has(norm)) freshCount++;
+    }
+    
+    return answers.length > 0 ? freshCount / answers.length : 0;
+}
+```
+
+Then update the `puzzle_analytics` row:
+
+```javascript
+const freshness = await computeFreshnessScore(puzzle, puzzleId, env);
+await env.DB.prepare(`
+    UPDATE puzzle_analytics SET freshness_score = ? WHERE puzzle_id = ?
+`).bind(freshness, puzzleId).run();
+```
+
+---
+
+### 7.6 New API Endpoint: `GET /api/stats/{date}`
+
+Add to `shared/core/createArchiveWorker.js`:
+
+```javascript
+// In the route handler, add before the 404 fallback:
+if (path.startsWith('/api/stats/')) {
+    const date = parseDate(path.slice('/api/stats/'.length));
+    if (!date) {
+        return errorResponse('Invalid date format. Use YYYY-MM-DD.');
+    }
+    return getPuzzleStats(date, env);
+}
+```
+
+The `getPuzzleStats()` function:
+
+```javascript
+async function getPuzzleStats(date, env) {
+    // Try KV cache first
+    const cacheKey = buildDateCacheKey('stats', date);
+    const cached = await getCachedJson(env, cacheKey);
+    if (cached) return successResponse(cached);
+    
+    // Get puzzle ID
+    const puzzle = await env.DB.prepare(
+        'SELECT puzzle_id FROM puzzles WHERE date = ?'
+    ).bind(date).first();
+    
+    if (!puzzle) return errorResponse(`No puzzle found for date: ${date}`, 404);
+    
+    // Get analytics
+    const stats = await env.DB.prepare(
+        'SELECT * FROM puzzle_analytics WHERE puzzle_id = ?'
+    ).bind(puzzle.puzzle_id).first();
+    
+    if (!stats) {
+        // Analytics not yet computed — compute on demand
+        const puzzleData = await getRawPuzzleDataByDate(date, env);
+        if (!puzzleData) return errorResponse(`No puzzle data for ${date}`, 404);
+        return successResponse({ date, message: 'Analytics not yet available. Will be computed on next cron sync.' });
+    }
+    
+    // Parse JSON fields
+    const result = {
+        date,
+        word_count: stats.word_count,
+        across_count: stats.across_count,
+        down_count: stats.down_count,
+        scrabble_score: stats.scrabble_score,
+        scrabble_average: stats.scrabble_average,
+        avg_word_length: stats.avg_word_length,
+        word_length_dist: JSON.parse(stats.word_length_dist || '{}'),
+        letter_dist: JSON.parse(stats.letter_dist || '{}'),
+        missing_letters: JSON.parse(stats.missing_letters || '[]'),
+        is_pangram: stats.is_pangram === 1,
+        fill_blank_count: stats.fill_blank_count,
+        unique_answer_count: stats.unique_answer_count,
+        longest_answer: stats.longest_answer,
+        longest_answer_len: stats.longest_answer_len,
+        shortest_answer: stats.shortest_answer,
+        shortest_answer_len: stats.shortest_answer_len,
+        // Category 2 (may be null for uclick XML providers)
+        grid_width: stats.grid_width,
+        grid_height: stats.grid_height,
+        block_count: stats.block_count,
+        cheater_count: stats.cheater_count,
+        open_squares: stats.open_squares,
+        grid_flow: stats.grid_flow,
+        freshness_score: stats.freshness_score,
+        grid_unavailable: stats.grid_unavailable === 1
+    };
+    
+    // Cache for 24 hours (analytics don't change)
+    await putCachedJson(env, cacheKey, result, 86400);
+    return successResponse(result);
+}
+```
+
+Also add to the root endpoint list:
+
+```javascript
+endpoints: [
+    '/api/puzzle/{date}',
+    '/api/puzzle/latest',
+    '/api/clues/{date}',
+    '/api/search/answer?q={answer}&mode=exact|contains',
+    '/api/search/clue?q={text}&mode=exact|contains',
+    '/api/related/answer?q={answer}',
+    '/api/stats/{date}',              // NEW
+    '/api/add/{date}/{apiToken?}',
+    '/api/update/latest/{apiToken?}',
+    '/api/delete/{date}/{apiToken?}'
+]
+```
+
+---
+
+### 7.7 Lazy Backfill for Existing Puzzles
+
+For puzzles already in the database (before analytics were added), we need a backfill mechanism. This is a **one-time operation** per worker, NOT a recurring cron.
+
+**New endpoint** (admin-only): `POST /api/backfill/analytics/{apiToken?}`
+
+```javascript
+if (path.startsWith('/api/backfill/analytics')) {
+    const parts = path.split('/').filter(Boolean);
+    const token = parts[3] || null;
+    if (!authorizeWrite(request, env, token)) {
+        return errorResponse('Unauthorized.', 401);
+    }
+    return backfillAnalytics(env, provider);
+}
+```
+
+The backfill function:
+
+```javascript
+async function backfillAnalytics(env, provider) {
+    // Get all puzzles that don't have analytics yet
+    const puzzles = await env.DB.prepare(`
+        SELECT p.puzzle_id, p.date
+        FROM puzzles p
+        LEFT JOIN puzzle_analytics a ON p.puzzle_id = a.puzzle_id
+        WHERE a.puzzle_id IS NULL
+        ORDER BY p.date ASC
+        LIMIT 100
+    `).all();
+    
+    let computed = 0;
+    let failed = 0;
+    
+    for (const row of (puzzles.results || [])) {
+        try {
+            // Re-fetch puzzle from source to get grid data
+            const puzzle = await provider.fetchByDate(row.date, env);
+            // Save with analytics computation enabled
+            await savePuzzleToDatabase(puzzle, env);
+            computed++;
+        } catch (e) {
+            // Source unavailable for old date — compute from DB data only (no grid)
+            const puzzleData = await getRawPuzzleDataByDate(row.date, env);
+            if (puzzleData) {
+                // Compute Category 1 only from DB data
+                const fakePuzzle = {
+                    date: row.date,
+                    clues: puzzleData.clues,
+                    grid: null,
+                    grid_width: null,
+                    grid_height: null
+                };
+                // ... compute and insert analytics
+                failed++; // Marked as "failed" because grid data unavailable
+            }
+        }
+    }
+    
+    return successResponse({
+        computed,
+        failed,
+        remaining: (puzzles.results || []).length >= 100 ? 'more than 100 remaining, run again' : 'done'
+    });
+}
+```
+
+**Important**: Backfill for old dates may fail because some sources don't have historical data. For those puzzles, Category 1 stats are computed from the existing DB data (clues table), but Category 2 stats will be `null` with `grid_unavailable: 1`.
+
+---
+
+### 7.8 Deployment Checklist — Step-by-Step
+
+1. **Add migration file**: Create `shared/migrations/0002_puzzle_analytics.sql`
+2. **Add analytics module**: Create `shared/core/analytics.js`
+3. **Modify `shared/core/utils.js`**: Add `grid`, `grid_width`, `grid_height` to `normalizePuzzlePayload()`
+4. **Modify `shared/core/amuselabs.js`**: Pass `grid`, `width`, `height` through in `parseAmusePuzzle()`
+5. **Modify each provider** (11 files): Pass grid data where available
+6. **Modify `shared/core/createArchiveWorker.js`**:
+   - Import `computePuzzleAnalytics` and `computeFreshnessScore`
+   - Add analytics computation in `savePuzzleToDatabase()`
+   - Add `/api/stats/{date}` endpoint
+   - Add `/api/backfill/analytics` endpoint
+   - Update root endpoint list
+7. **Run migration** on each worker's D1:
+   ```powershell
+   npx wrangler d1 execute {databaseName} --file=../../shared/migrations/0002_puzzle_analytics.sql --remote
+   ```
+8. **Regenerate workers**: `npm run generate`
+9. **Redeploy each worker**: `npx wrangler deploy` from each worker directory
+10. **Run backfill** for existing puzzles: `POST /api/backfill/analytics` per worker
+11. **Update README.md**: Add `/api/stats/{date}` to the API documentation
+12. **Update SETUP-COMMANDS.md**: Add migration 0002 to setup commands
+
+---
+
+### 7.9 Performance Impact — Why This Won't Cause Issues
+
+| Concern | Mitigation |
+|---------|------------|
+| Extra D1 write per puzzle save | One INSERT into `puzzle_analytics` — negligible vs. the existing 50+ clue inserts |
+| Freshness score query | Single SELECT with IN clause — O(N) where N = unique answers in puzzle (typically 40-80) |
+| Grid computation at ingest time | Pure JS math operations — <5ms for a 15x15 grid |
+| Extra KV cache entry per puzzle | One more KV key per date (`stats:{date}`) — well within 1000 writes/day free tier |
+| Backfill for existing puzzles | Batches of 100, admin-only, one-time operation |
+| No grid data for uclick XML | Graceful degradation — Category 1 works, Category 2 returns `null` with `grid_unavailable` flag |
+| No API_TOKEN = open access | Backfill endpoint requires auth, stats endpoint is public read-only |
+
+**Total added D1 writes per cron sync**: 1 INSERT + 1 UPDATE = 2 writes (vs. existing ~100 writes for clue insertion)
+**Total added D1 reads per stats request**: 2 reads (puzzle lookup + analytics lookup) — cached in KV after first request
+**Total added KV entries**: 1 per date (`stats:{date}`) — negligible
+
+---
+
+### 7.10 Future Phases (NOT Part of This Plan)
+
+These are noted for future consideration but NOT included in the current implementation:
+
+| Phase | Features | Complexity |
+|-------|----------|-----------|
+| Category 3 | Cross-worker answer frequency, constructor stats across sources, day-of-week difficulty trends | Needs cross-worker aggregation service |
+| Category 4 | Clue reuse heatmap, constructor difficulty rating, editorial analysis, real-time solving statistics | Needs mature historical data + user interaction data |
+| Phase 2 | Grid visualization on frontend, interactive cheater-square highlighting, colorized freshness grid | Frontend work — depends on this backend plan being complete |

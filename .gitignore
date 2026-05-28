@@ -5,3 +5,6 @@ node_modules/
 *.sqlite-shm
 *.sqlite-wal
 package-lock.json
+
+# Generated worker directories — run `npm run generate` to recreate
+workers/
